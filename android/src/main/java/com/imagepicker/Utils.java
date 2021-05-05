@@ -7,7 +7,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.camera2.CameraCharacteristics;
@@ -16,7 +15,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
-import android.provider.OpenableColumns;
 import android.util.Base64;
 import android.webkit.MimeTypeMap;
 
@@ -70,7 +68,7 @@ public class Utils {
         return FileProvider.getUriForFile(reactContext, authority, file);
     }
 
-    public static void saveToPublicDirectory(Uri uri, Context context, String mediaType) {
+    public static Uri createMediaStoreUri(Context context, String mediaType) {
         ContentResolver resolver = context.getContentResolver();
         Uri mediaStoreUri;
         ContentValues fileDetails = new ContentValues();
@@ -83,6 +81,12 @@ public class Utils {
             mediaStoreUri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, fileDetails);
         }
 
+        return mediaStoreUri;
+    }
+
+    public static void saveToPublicDirectory(Uri uri, Context context, String mediaType) {
+        ContentResolver resolver = context.getContentResolver();
+        Uri mediaStoreUri = createMediaStoreUri(context, mediaType);
         copyUri(uri, mediaStoreUri, resolver);
     }
 

@@ -15,8 +15,6 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.module.annotations.ReactModule;
 
-import java.io.File;
-
 import static com.imagepicker.Utils.*;
 
 @ReactModule(name = ImagePickerModule.NAME)
@@ -75,7 +73,6 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         }
 
         int requestCode;
-        File file;
         Intent cameraIntent;
 
         if (this.options.pickVideo) {
@@ -85,20 +82,18 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
             if (this.options.durationLimit > 0) {
                 cameraIntent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, this.options.durationLimit);
             }
-            file = createFile(reactContext, "mp4");
-            cameraCaptureURI = createUri(file, reactContext);
+            cameraCaptureURI = createMediaStoreUri(reactContext, "video");
         } else {
             requestCode = REQUEST_LAUNCH_IMAGE_CAPTURE;
             cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            file = createFile(reactContext, "jpg");
-            cameraCaptureURI = createUri(file, reactContext);
+            cameraCaptureURI = createMediaStoreUri(reactContext, "photo");
         }
 
         if (this.options.useFrontCamera) {
             setFrontCamera(cameraIntent);
         }
 
-        fileUri = Uri.fromFile(file);
+        fileUri = cameraCaptureURI;
         cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, cameraCaptureURI);
         cameraIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
 
@@ -167,9 +162,6 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
         switch (requestCode) {
             case REQUEST_LAUNCH_IMAGE_CAPTURE:
-                if (options.saveToPhotos) {
-                    saveToPublicDirectory(cameraCaptureURI, reactContext, "photo");
-                }
                 onImageObtained(fileUri);
                 break;
 
@@ -182,9 +174,6 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
                 break;
 
             case REQUEST_LAUNCH_VIDEO_CAPTURE:
-                if (options.saveToPhotos) {
-                    saveToPublicDirectory(cameraCaptureURI, reactContext, "video");
-                }
                 onVideoObtained(fileUri);
                 break;
         }
