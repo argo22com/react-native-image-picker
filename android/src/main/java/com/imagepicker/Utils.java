@@ -7,6 +7,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.camera2.CameraCharacteristics;
@@ -39,8 +40,6 @@ import java.util.UUID;
 import static com.imagepicker.ImagePickerModule.*;
 
 public class Utils {
-    public static String fileNamePrefix = "rn_image_picker_lib_temp_";
-
     public static String errCameraUnavailable = "camera_unavailable";
     public static String errPermission = "permission";
     public static String errOthers = "others";
@@ -49,7 +48,7 @@ public class Utils {
 
     public static File createFile(Context reactContext, String fileType) {
         try {
-            String filename = fileNamePrefix  + UUID.randomUUID() + "." + fileType;
+            String filename = UUID.randomUUID() + "." + fileType;
 
             // getCacheDir will auto-clean according to android docs
             File fileDir = reactContext.getCacheDir();
@@ -299,13 +298,35 @@ public class Utils {
     static void deleteFile(Uri uri, Context context) {
         Log.d(NAME, "Deleting temporary file " + uri.toString());
         if (uri.getScheme().equals("content")){
-            Log.d(NAME, "Deleting using content resolved");
+            Log.d(NAME, "Deleting using content resolver");
             ContentResolver resolver = context.getContentResolver();
             resolver.delete(uri, null, null);
         } else {
-            Log.d(NAME, "Deleting using file");
+            Log.d(NAME, "Deleting using File");
             new File(uri.getPath()).delete();
         }
+    }
+
+    static String getFileNameFromFileUri(Uri uri, Context context) {
+        String[] projection = {MediaStore.MediaColumns.DISPLAY_NAME};
+        String path = uri.getLastPathSegment();
+
+        if(!uri.getScheme().equals("content")) {
+            return path;
+        }
+
+        ContentResolver cr = context.getContentResolver();
+        Cursor metaCursor = cr.query(uri, projection, null, null, null);
+        if (metaCursor != null) {
+            try {
+                if (metaCursor.moveToFirst()) {
+                    path = metaCursor.getString(0);
+                }
+            } finally {
+                metaCursor.close();
+            }
+        }
+        return path;
     }
 
     static String getMimeTypeFromFileUri(Uri uri) {
@@ -349,13 +370,12 @@ public class Utils {
     }
 
     static ReadableMap getResponseMap(Uri uri, Options options, Context context) {
-        String fileName = uri.getLastPathSegment();
         int[] dimensions = getImageDimensions(uri, context);
 
         WritableMap map = Arguments.createMap();
         map.putString("uri", uri.toString());
         map.putDouble("fileSize", getFileSize(uri, context));
-        map.putString("fileName", fileName);
+        map.putString("fileName", getFileNameFromFileUri(uri, context));
         map.putString("type", getMimeTypeFromFileUri(uri));
         map.putInt("width", dimensions[0]);
         map.putInt("height", dimensions[1]);
@@ -367,12 +387,11 @@ public class Utils {
     }
 
     static ReadableMap getVideoResponseMap(Uri uri, Context context) {
-        String fileName = uri.getLastPathSegment();
         WritableMap map = Arguments.createMap();
         map.putString("uri", uri.toString());
         map.putDouble("fileSize", getFileSize(uri, context));
         map.putInt("duration", getDuration(uri, context));
-        map.putString("fileName", fileName);
+        map.putString("fileName", getFileNameFromFileUri(uri, context));
         return map;
     }
 
