@@ -153,8 +153,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         }
 
         if (resultCode != Activity.RESULT_OK) {
-            if (requestCode == REQUEST_LAUNCH_IMAGE_CAPTURE) {
-                deleteFile(fileUri);
+            if (requestCode == REQUEST_LAUNCH_IMAGE_CAPTURE || requestCode == REQUEST_LAUNCH_VIDEO_CAPTURE) {
+                deleteFile(fileUri, reactContext);
             }
             callback.invoke(getCancelMap());
             return;

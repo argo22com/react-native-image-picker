@@ -16,6 +16,7 @@ import android.os.Build;
 import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
 import android.util.Base64;
+import android.util.Log;
 import android.webkit.MimeTypeMap;
 
 import androidx.core.app.ActivityCompat;
@@ -295,8 +296,16 @@ public class Utils {
         return "jpg";
     }
 
-    static void deleteFile(Uri uri) {
-        new File(uri.getPath()).delete();
+    static void deleteFile(Uri uri, Context context) {
+        Log.d(NAME, "Deleting temporary file " + uri.toString());
+        if (uri.getScheme().equals("content")){
+            Log.d(NAME, "Deleting using content resolved");
+            ContentResolver resolver = context.getContentResolver();
+            resolver.delete(uri, null, null);
+        } else {
+            Log.d(NAME, "Deleting using file");
+            new File(uri.getPath()).delete();
+        }
     }
 
     static String getMimeTypeFromFileUri(Uri uri) {
