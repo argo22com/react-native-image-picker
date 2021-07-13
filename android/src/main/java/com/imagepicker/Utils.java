@@ -1,6 +1,7 @@
 package com.imagepicker;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -34,8 +35,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.UUID;
+import java.util.Date;
 
 import static com.imagepicker.ImagePickerModule.*;
 
@@ -48,7 +50,7 @@ public class Utils {
 
     public static File createFile(Context reactContext, String fileType) {
         try {
-            String filename = UUID.randomUUID() + "." + fileType;
+            String filename = getDateTimeString() + "." + fileType;
 
             // getCacheDir will auto-clean according to android docs
             File fileDir = reactContext.getCacheDir();
@@ -63,6 +65,11 @@ public class Utils {
         }
     }
 
+    @SuppressLint("SimpleDateFormat")
+    private static String getDateTimeString() {
+        return new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+    }
+
     public static Uri createUri(File file, Context reactContext) {
         String authority = reactContext.getApplicationContext().getPackageName() + ".imagepickerprovider";
         return FileProvider.getUriForFile(reactContext, authority, file);
@@ -74,10 +81,10 @@ public class Utils {
         ContentValues fileDetails = new ContentValues();
 
         if (mediaType.equals("video")) {
-            fileDetails.put(MediaStore.Video.Media.DISPLAY_NAME, UUID.randomUUID().toString());
+            fileDetails.put(MediaStore.Video.Media.DISPLAY_NAME, getDateTimeString());
             mediaStoreUri = resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, fileDetails);
         } else {
-            fileDetails.put(MediaStore.Images.Media.DISPLAY_NAME, UUID.randomUUID().toString());
+            fileDetails.put(MediaStore.Images.Media.DISPLAY_NAME, getDateTimeString());
             mediaStoreUri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, fileDetails);
         }
 
